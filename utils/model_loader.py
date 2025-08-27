@@ -8,7 +8,49 @@ from langchain_groq import ChatGroq
 from logger import GLOBAL_LOGGER as log
 from exception.custom_exception import DocumentPortalException
 
-log = CustomLogger().get_logger(__name__)
+#log = CustomLogger().get_logger(__name__)
+
+class ApiKeyManager:
+    pass
+    # REQUIRED_KEYS = ["GROQ_API_KEY", "GOOGLE_API_KEY"]
+
+    # def __init__(self):
+    #     self.api_keys = {}
+    #     raw = os.getenv("API_KEYS")
+
+    #     if raw:
+    #         try:
+    #             parsed = json.loads(raw)
+    #             if not isinstance(parsed, dict):
+    #                 raise ValueError("API_KEYS is not a valid JSON object")
+    #             self.api_keys = parsed
+    #             log.info("Loaded API_KEYS from ECS secret")
+    #         except Exception as e:
+    #             log.warning("Failed to parse API_KEYS as JSON", error=str(e))
+
+    #     # Fallback to individual env vars
+    #     for key in self.REQUIRED_KEYS:
+    #         if not self.api_keys.get(key):
+    #             env_val = os.getenv(key)
+    #             if env_val:
+    #                 self.api_keys[key] = env_val
+    #                 log.info(f"Loaded {key} from individual env var")
+
+    #     # Final check
+    #     missing = [k for k in self.REQUIRED_KEYS if not self.api_keys.get(k)]
+    #     if missing:
+    #         log.error("Missing required API keys", missing_keys=missing)
+    #         raise DocumentPortalException("Missing API keys", sys)
+
+    #     log.info("API keys loaded", keys={k: v[:6] + "..." for k, v in self.api_keys.items()})
+
+
+    # def get(self, key: str) -> str:
+    #     val = self.api_keys.get(key)
+    #     if not val:
+    #         raise KeyError(f"API key for {key} is missing")
+    #     return val
+
 
 class ModelLoader:
     """
