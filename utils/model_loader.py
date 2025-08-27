@@ -12,7 +12,7 @@ from exception.custom_exception import DocumentPortalException
 
 class ApiKeyManager:
     pass
-    # REQUIRED_KEYS = ["GROQ_API_KEY", "GOOGLE_API_KEY"]
+    REQUIRED_KEYS = ["GROQ_API_KEY", "GOOGLE_API_KEY"]
 
     def __init__(self):
         self.api_keys = {}
@@ -45,11 +45,11 @@ class ApiKeyManager:
         log.info("API keys loaded", keys={k: v[:6] + "..." for k, v in self.api_keys.items()})
 
 
-    # def get(self, key: str) -> str:
-    #     val = self.api_keys.get(key)
-    #     if not val:
-    #         raise KeyError(f"API key for {key} is missing")
-    #     return val
+    def get(self, key: str) -> str:
+        val = self.api_keys.get(key)
+        if not val:
+            raise KeyError(f"API key for {key} is missing")
+        return val
 
 
 class ModelLoader:
