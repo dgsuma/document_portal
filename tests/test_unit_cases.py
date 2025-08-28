@@ -110,3 +110,27 @@ def test_compare_success(monkeypatch):
     assert body["rows"] == [{"page": 1, "change": "Added clause"}]
     assert body["session_id"] == "abc123"
     
+def test_compare_failure(monkeypatch):
+    """ test_compare_failure() - Tests error handling in document comparison """
+    import api.main as main
+
+    class FailingComparator:
+        def __init__(self):
+            self.session_id = "x"
+        def save_uploaded_files(self, reference, actual):
+            return ("/tmp/ref.pdf", "/tmp/act.pdf")
+        def combine_documents(self):
+            raise RuntimeError("nope")
+
+    monkeypatch.setattr(main, "DocumentComparator", lambda: FailingComparator())
+    # LLM comparator won't be reached but mock anyway
+    monkeypatch.setattr(main, "DocumentComparatorLLM", lambda: object())
+
+    files = {
+        "reference": ("ref.pdf", b"ref", "application/pdf"),
+        "actual": ("act.pdf", b"act", "application/pdf"),
+    }
+    resp = client.post("/compare", files=files)
+    assert resp.status_code == 500
+    assert "Comparison failed" in resp.json()["detail"]
+    
