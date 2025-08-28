@@ -18,3 +18,13 @@ def test_health_ok():
     data = resp.json()
     assert data["status"] == "ok"
     assert data["service"] == "document-portal"
+    
+def test_analyze_success(monkeypatch):
+    """test_analyze_success() - Tests the /analyze endpoint with a mock PDF file"""
+    # Mock dependencies inside api.main
+    import api.main as main
+
+    class DummyDocHandler:
+        def save_pdf(self, file_adapter):
+            return "dummy/path.pdf"
+        
