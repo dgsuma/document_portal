@@ -46,3 +46,27 @@ def test_analyze_success(monkeypatch):
     resp = client.post("/analyze", files=files)
     assert resp.status_code == 200
     assert resp.json() == {"summary": "ok", "length": len("Sample PDF text")}
+
+def test_analyze_failure(monkeypatch):
+    """ test_analyze_failure() - Tests error handling in document analysis """
+    import api.main as main
+
+    class DummyDocHandler:
+        def save_pdf(self, file_adapter):
+            return "dummy/path.pdf"
+
+    def dummy_read_pdf_via_handler(handler, path: str) -> str:
+        return "text"
+
+    class FailingAnalyzer:
+        def analyze_document(self, text: str):
+            raise ValueError("boom")
+
+    monkeypatch.setattr(main, "DocHandler", lambda: DummyDocHandler())
+    monkeypatch.setattr(main, "read_pdf_via_handler", dummy_read_pdf_via_handler)
+    monkeypatch.setattr(main, "DocumentAnalyzer", lambda: FailingAnalyzer())
+
+    files = {"file": ("test.pdf", b"%PDF-1.4 ...", "application/pdf")}
+    resp = client.post("/analyze", files=files)
+    assert resp.status_code == 500
+    assert "Analysis failed" in resp.json()["detail"]
