@@ -27,4 +27,22 @@ def test_analyze_success(monkeypatch):
     class DummyDocHandler:
         def save_pdf(self, file_adapter):
             return "dummy/path.pdf"
-        
+
+    def dummy_read_pdf_via_handler(handler, path: str) -> str:
+        assert isinstance(handler, DummyDocHandler)
+        assert path == "dummy/path.pdf"
+        return "Sample PDF text"
+
+    class DummyAnalyzer:
+        def analyze_document(self, text: str):
+            assert text == "Sample PDF text"
+            return {"summary": "ok", "length": len(text)}
+
+    monkeypatch.setattr(main, "DocHandler", lambda: DummyDocHandler())
+    monkeypatch.setattr(main, "read_pdf_via_handler", dummy_read_pdf_via_handler)
+    monkeypatch.setattr(main, "DocumentAnalyzer", lambda: DummyAnalyzer())
+
+    files = {"file": ("test.pdf", b"%PDF-1.4 ...", "application/pdf")}
+    resp = client.post("/analyze", files=files)
+    assert resp.status_code == 200
+    assert resp.json() == {"summary": "ok", "length": len("Sample PDF text")}
