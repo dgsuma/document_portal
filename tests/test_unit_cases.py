@@ -134,3 +134,29 @@ def test_compare_failure(monkeypatch):
     assert resp.status_code == 500
     assert "Comparison failed" in resp.json()["detail"]
     
+def test_chat_index_success(monkeypatch):
+    """ test_chat_index_success() - Tests successful chat index creation with multiple files """
+    import api.main as main
+
+    class DummyCI:
+        def __init__(self, temp_base, faiss_base, use_session_dirs, session_id):
+            self.session_id = session_id or "sess-001"
+        def built_retriver(self, wrapped, chunk_size, chunk_overlap, k):
+            # wrapped is a list of adapters
+            assert isinstance(wrapped, list)
+            return None
+
+    monkeypatch.setattr(main, "ChatIngestor", lambda **kwargs: DummyCI(**kwargs))
+
+    # two files
+    files = [
+        ("files", ("a.pdf", b"a", "application/pdf")),
+        ("files", ("b.txt", b"b", "text/plain")),
+    ]
+    data = {"use_session_dirs": "true", "chunk_size": "500", "chunk_overlap": "50", "k": "3"}
+    resp = client.post("/chat/index", files=files, data=data)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["session_id"] == "sess-001"
+    assert body["k"] == 3
+    assert body["use_session_dirs"] is True
