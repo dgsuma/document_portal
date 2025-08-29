@@ -177,3 +177,9 @@ def test_chat_index_failure(monkeypatch):
     resp = client.post("/chat/index", files=files, data={"use_session_dirs": "true", "k": "5"})
     assert resp.status_code == 500
     assert "Indexing failed" in resp.json()["detail"]
+    
+def test_chat_query_requires_session_id_when_use_session_dirs_true():
+    """ test_chat_query_requires_session_id_when_use_session_dirs_true() - Tests validation logic for session_id requirement """
+    resp = client.post("/chat/query", data={"question": "Hi", "use_session_dirs": "true", "k": "5"})
+    assert resp.status_code == 400
+    assert "session_id is required" in resp.json()["detail"]
