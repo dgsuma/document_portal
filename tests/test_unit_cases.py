@@ -183,3 +183,16 @@ def test_chat_query_requires_session_id_when_use_session_dirs_true():
     resp = client.post("/chat/query", data={"question": "Hi", "use_session_dirs": "true", "k": "5"})
     assert resp.status_code == 400
     assert "session_id is required" in resp.json()["detail"]
+    
+def test_chat_query_index_not_found(monkeypatch):
+    """ test_chat_query_index_not_found() - Tests error handling when FAISS index directory doesn't exist """
+    import api.main as main
+    # Force directory to be missing
+    monkeypatch.setattr(main.os.path, "isdir", lambda p: False)
+
+    resp = client.post(
+        "/chat/query",
+        data={"question": "Hi", "session_id": "sess", "use_session_dirs": "true", "k": "2"},
+    )
+    assert resp.status_code == 404
+    assert "FAISS index not found" in resp.json()["detail"]
