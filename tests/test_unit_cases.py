@@ -196,3 +196,40 @@ def test_chat_query_index_not_found(monkeypatch):
     )
     assert resp.status_code == 404
     assert "FAISS index not found" in resp.json()["detail"]
+    
+def test_chat_query_success(monkeypatch, tmp_path):
+    """ test_chat_query_success() - Tests successful chat query with mocked RAG system """
+    import api.main as main
+
+    # Pretend index dir exists
+    monkeypatch.setattr(main.os.path, "isdir", lambda p: True)
+
+    class DummyRAG:
+        def __init__(self, session_id=None):
+            self.session_id = session_id
+        def load_retriever_from_faiss(self, index_dir, k, index_name):
+            # Validate parameters passed from endpoint
+            assert isinstance(index_dir, str)
+            assert isinstance(k, int)
+            assert isinstance(index_name, str)
+        def invoke(self, question, chat_history=None):
+            assert question == "What?"
+            return "Because..."
+
+    monkeypatch.setattr(main, "ConversationalRAG", lambda session_id=None: DummyRAG(session_id=session_id))
+
+    resp = client.post(
+        "/chat/query",
+        data={
+            "question": "What?",
+            "session_id": "sess-42",
+            "use_session_dirs": "true",
+            "k": "4",
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["answer"] == "Because..."
+    assert body["session_id"] == "sess-42"
+    assert body["k"] == 4
+    assert body["engine"] == "LCEL-RAG"
