@@ -160,3 +160,20 @@ def test_chat_index_success(monkeypatch):
     assert body["session_id"] == "sess-001"
     assert body["k"] == 3
     assert body["use_session_dirs"] is True
+    
+def test_chat_index_failure(monkeypatch):
+    """ test_chat_index_failure() - Tests error handling in chat index creation """
+    import api.main as main
+
+    class FailingCI:
+        def __init__(self, **kwargs):
+            self.session_id = "s"
+        def built_retriver(self, *a, **k):
+            raise RuntimeError("index fail")
+
+    monkeypatch.setattr(main, "ChatIngestor", lambda **kwargs: FailingCI(**kwargs))
+
+    files = [("files", ("a.pdf", b"a", "application/pdf"))]
+    resp = client.post("/chat/index", files=files, data={"use_session_dirs": "true", "k": "5"})
+    assert resp.status_code == 500
+    assert "Indexing failed" in resp.json()["detail"]
